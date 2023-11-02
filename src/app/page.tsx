@@ -1,5 +1,7 @@
 "use client";
 
+declare module '*.md';
+
 import Homepage from '../markdown/Homepage.md'
 import Markdown from "@/components/Markdown";
 import {inter} from "@/app/fonts";
