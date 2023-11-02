@@ -1,6 +1,7 @@
 import hljs from "highlight.js";
 import {emojify} from 'node-emoji';
-import { marked } from "marked";
+import {marked} from "marked";
+import {markedHighlight} from "marked-highlight";
 
 export interface MarkdownResult {
     error: string | undefined,
@@ -64,7 +65,18 @@ const renderer = {
     }
 }
 
-marked.use({ renderer })
+marked.use({ renderer }, markedHighlight({
+    highlight: (code, lang) => {
+        if (lang == "" || !hljs.getLanguage(lang)) {
+            const automatic = hljs.highlightAuto(code);
+            return displayLanguage(automatic.language ?? 'unknown') + automatic.value;
+        }
+
+        return displayLanguage(lang) + hljs.highlight(code, {
+            language: lang,
+        }).value;
+    }
+}))
 
 function displayLanguage(lang: string) {
     return (`<div class="pb-2 text-xs text-slate-400 select-none">${lang.slice(0, 1).toUpperCase() + lang.slice(1)}</div>`)
@@ -74,18 +86,7 @@ export function toHTML(text: string): MarkdownResult {
     try {
         return {
             content: marked(emojis(text), {
-                smartypants: true,
                 gfm: true,
-                highlight: (code, lang) => {
-                    if (lang == "" || !hljs.getLanguage(lang)) {
-                        const automatic = hljs.highlightAuto(code);
-                        return displayLanguage(automatic.language ?? 'unknown') + automatic.value;
-                    }
-
-                    return displayLanguage(lang) + hljs.highlight(code, {
-                        language: lang,
-                    }).value;
-                },
             }),
             error: undefined
         }
